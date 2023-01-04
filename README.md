@@ -1,6 +1,6 @@
 # Automation of Destructure Pattern
-![Crates.io](https://img.shields.io/crates/v/destructure?label=crate.io&logo=rust&style=flat-square)
-![docs.rs](https://img.shields.io/docsrs/destructure?color=6162ff&label=docs.rs&logo=docs.rs&style=flat-square)
+[<img alt="crate.io" src="https://img.shields.io/crates/v/destructure?label=crate.io&logo=rust&style=flat-square">](https://crates.io/crates/destructure)
+[<img alt="docs.rs" src="https://img.shields.io/docsrs/destructure?color=6162ff&label=docs.rs&logo=docs.rs&style=flat-square">](https://docs.rs/destructure/0.1.1/destructure/)
 
 `destructure` is a automation library for `destructure pattern`.
 
