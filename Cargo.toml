@@ -1,0 +1,20 @@
+[package]
+name = "destructure"
+version = "0.1.0"
+edition = "2021"
+authors = ["ReiRokusanami <reirokusanami.rdh@gmail.com>"]
+license = "MIT OR Apache-2.0"
+
+[lib]
+proc-macro = true
+
+[[test]]
+name = "tests"
+path = "tests/program.rs"
+
+[dev-dependencies]
+trybuild = "1.0"
+
+[dependencies]
+syn = { version = "1", features = ["extra-traits", "derive"] }
+quote = "1"
