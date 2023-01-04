@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 authors = ["ReiRokusanami <reirokusanami.rdh@gmail.com>"]
 license = "MIT OR Apache-2.0"
+description = "Automation of Destructure Pattern"
 
 [lib]
 proc-macro = true
