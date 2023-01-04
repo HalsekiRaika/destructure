@@ -6,11 +6,9 @@ use std::marker::PhantomData;
 mod A {
     use destructure::Destructure;
 
-    use crate::NumId;
-
     #[derive(Destructure)]
     pub struct Book {
-        id: NumId<Book>,
+        id: crate::NumId<Book>,
         name: String,
         published_at: String,
         author: String,
@@ -19,7 +17,7 @@ mod A {
     impl Book {
         pub fn new(id: impl Into<i32>, name: impl Into<String>,
             published_at: impl Into<String>, author: impl Into<String>) -> Self {
-                Self { id: NumId::new(id), name: name.into(), published_at: published_at.into(), author: author.into() }
+                Self { id: crate::NumId::new(id), name: name.into(), published_at: published_at.into(), author: author.into() }
         }
     }
 }
