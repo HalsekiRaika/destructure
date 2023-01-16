@@ -120,6 +120,7 @@ use syn::{
     FieldsNamed,
 };
 
+/// Automatically implements `into_destruct()` and `freeze()` methods.
 #[proc_macro_derive(Destructure)]
 pub fn derive_destructure(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
