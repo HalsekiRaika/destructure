@@ -3,7 +3,7 @@
 //! `destructure` is a automation library for `destructure pattern`.
 //! 
 //! ## Usage
-//! ```rust, no_run
+//! ```rust,ignore
 //! use destructure::Destructure;
 //! 
 //! #[derive(Destructure)]
@@ -35,7 +35,7 @@
 //!   
 //! This allows for a simplified representation, as in the following example
 //! 
-//! ```rust, no_run
+//! ```rust,ignore
 //! pub struct AuthenticateResponse {
 //!     id: Uuid,
 //!     user_code: String,
@@ -83,7 +83,7 @@
 //! 
 //! Therefore, I created a *Procedural Macro* that automatically generates structures and methods:
 //! 
-//! ```rust, no_run
+//! ```rust,ignore
 //! use destructure::Destructure;
 //! 
 //! #[derive(Destructure)]
@@ -149,15 +149,27 @@ pub fn derive_destructure(input: TokenStream) -> TokenStream {
         }
     });
 
+    let freeze = expanded.clone();
+
     quote::quote! {
-        /// DO NOT USE IMPL
+        /// Do not have an explicit implementation for this structure.
         pub struct #generate_ident {
             #(#destruction,)*
         }
 
         impl #name {
+            /// Convert the field value to a fully disclosed Destruct structure.
+            /// 
+            /// If you wish to revert the Destruct structure back to the original structure, see `freeze()`.
             pub fn into_destruct(self) -> #generate_ident {
                 #generate_ident { #(#expanded,)* }
+            }
+        }
+
+        impl #generate_ident {
+            /// Restore the Destruct structure to its original structure again.
+            pub fn freeze(self) -> #name {
+                #name { #(#freeze,)* }
             }
         }
     }.into()
