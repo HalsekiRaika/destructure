@@ -152,7 +152,7 @@ pub fn derive_destructure(input: TokenStream) -> TokenStream {
 
     let freeze = expanded.clone();
 
-    quote::quote! {
+    let q = quote::quote! {
         /// Do not have an explicit implementation for this structure.
         pub struct #generate_ident {
             #(#destruction,)*
@@ -173,5 +173,7 @@ pub fn derive_destructure(input: TokenStream) -> TokenStream {
                 #name { #(#freeze,)* }
             }
         }
-    }.into()
+    };
+
+    q.into()
 }
