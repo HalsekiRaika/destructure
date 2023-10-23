@@ -3,76 +3,80 @@
 //! `destructure` is a automation library for `destructure pattern`.
 //! 
 //! ## Usage
-//! ```rust,ignore
+//! ```rust
 //! use destructure::Destructure;
 //! 
 //! #[derive(Destructure)]
-//! pub struct AuthenticateResponse {
-//!     id: Uuid,
-//!     user_code: String,
-//!     verification_uri: String,
-//!     expires_in: i32,
-//!     message: String,
-//!     ... // too many fields...
+//! pub struct Book {
+//!     id: u64,
+//!     name: String,
+//!     stocked_at: String,
+//!     author: String,
+//!     // ... too many fields...
 //! }
 //! 
 //! fn main() {
-//!     let res = reqwest::get("http://example.com")
-//!         .send().await.unwrap()
-//!         .json::<AuthenticateResponse>().await.unwrap();
+//!     let book = Book {
+//!         id: 1234_5678_9999_0000u64,
+//!         name: "name".to_string(),
+//!         stocked_at: "2023/01/03".to_string(),
+//!         author: "author".to_string()
+//!     };
 //! 
 //!     // Auto generate
-//!     let des: DestructAuthenticateResponse = res.into_destruct();
+//!     let des: DestructBook = book.into_destruct();
 //! 
 //!     println!("{:?}", des.id);
 //! }
 //! ```
 //! 
 //! ### What is `destructure pattern`?
-//! A structure with too many fields makes it hard to call constructors, but it is also hard work to prepare a `Getter/Setter` for each one. There are macros for this purpose, but even so, a large number of macros reduces readability. This is especially true when using `From<T>` Trait.  
+//! A structure with too many fields makes it hard to call constructors,
+//! but it is also hard work to prepare a `Getter/Setter` for each one.
+//! There are macros for this purpose, but even so, a large number of macros reduces readability.
+//! This is especially true when using `From<T>` Trait.
 //! 
 //! So how can this be simplified? It is the technique of "converting all fields to public". 
 //!   
 //! This allows for a simplified representation, as in the following example
 //! 
-//! ```rust,ignore
-//! pub struct AuthenticateResponse {
-//!     id: Uuid,
-//!     user_code: String,
-//!     verification_uri: String,
-//!     expires_in: i32,
-//!     message: String,
-//!     ... // too many fields...
+//! ```rust
+//! pub struct Book {
+//!     id: u64,
+//!     name: String,
+//!     stocked_at: String,
+//!     author: String,
+//!     // ... too many fields...
 //! }
 //! 
-//! impl AuthenticateResponse {
-//!     pub fn into_destruct(self) -> DestructAuthenticateResponse {
-//!         DestructAuthenticateResponse {
+//! impl Book {
+//!     pub fn into_destruct(self) -> DestructBook {
+//!         DestructBook {
 //!             id: self.id,
-//!             user_code: self.user_code,
-//!             verification_uri: self.verification_uri,
-//!             expires_in: self.expires_in,
-//!             message: self.message,
-//!             ...
+//!             name: self.name,
+//!             stocked_at: self.stocked_at,
+//!             author: self.author,
 //!         }
 //!     }
 //! }
 //! 
-//! pub struct DestructAuthenticateResponse {
-//!     pub id: Uuid,
-//!     pub user_code: String,
-//!     pub verification_uri: String,
-//!     pub expires_in: i32,
-//!     pub message: String,
-//!     ... // too many fields (All `public`.)...
+//! pub struct DestructBook {
+//!     pub id: u64,
+//!     pub name: String,
+//!     pub stocked_at: String,
+//!     pub author: String,
+//!     // ... too many fields (All `public`.)...
 //! }
-//! 
+//!
 //! fn main() {
-//!     let res = reqwest::get("http://example.com")
-//!         .send().await.unwrap()
-//!         .json::<AuthenticateResponse>().await.unwrap();
+//!     let book = Book {
+//!         id: 1234_5678_9999_0000u64,
+//!         name: "name".to_string(),
+//!         stocked_at: "2023/01/03".to_string(),
+//!         author: "author".to_string()
+//!     };
 //!     
-//!     let des = res.into_destruct();
+//!     let des = book.into_destruct();
 //! 
 //!     println!("{:?}", des.id);
 //! }
@@ -83,27 +87,29 @@
 //! 
 //! Therefore, I created a *Procedural Macro* that automatically generates structures and methods:
 //! 
-//! ```rust,ignore
+//! ```rust
 //! use destructure::Destructure;
-//! 
+//!
 //! #[derive(Destructure)]
-//! pub struct AuthenticateResponse {
-//!     id: Uuid,
-//!     user_code: String,
-//!     verification_uri: String,
-//!     expires_in: i32,
-//!     message: String,
-//!     ... // too many fields...
+//! pub struct Book {
+//!     id: u64,
+//!     name: String,
+//!     stocked_at: String,
+//!     author: String,
+//!     // ... too many fields...
 //! }
-//! 
+//!
 //! fn main() {
-//!     let res = reqwest::get("http://example.com")
-//!         .send().await.unwrap()
-//!         .json::<AuthenticateResponse>().await.unwrap();
-//! 
+//!     let book = Book {
+//!         id: 1234_5678_9999_0000u64,
+//!         name: "name".to_string(),
+//!         stocked_at: "2023/01/03".to_string(),
+//!         author: "author".to_string()
+//!     };
+//!
 //!     // Auto generate
-//!     let des: DestructAuthenticateResponse = res.into_destruct();
-//! 
+//!     let des: DestructBook = book.into_destruct();
+//!
 //!     println!("{:?}", des.id);
 //! }
 //!```
