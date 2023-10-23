@@ -18,5 +18,5 @@ path = "tests/program.rs"
 trybuild = "1.0"
 
 [dependencies]
-syn = { version = "1", features = ["extra-traits", "derive"] }
+syn = { version = "2", features = ["extra-traits", "derive"] }
 quote = "1"
