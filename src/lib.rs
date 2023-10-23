@@ -113,6 +113,39 @@
 //!     println!("{:?}", des.id);
 //! }
 //!```
+//!
+//! You can also perform safe value substitution by using `reconstruct()`,
+//! which performs the same role as the following usage.
+//! ```rust
+//! use destructure::Destructure;
+//!
+//! #[derive(Debug, Eq, PartialEq, Clone, Destructure)]
+//! pub struct Book {
+//!     id: u64,
+//!     name: String,
+//!     stocked_at: String,
+//!     author: String,
+//!     // ... too many fields...
+//! }
+//!
+//! fn main() {
+//!    let before = Book {
+//!        id: 1234_5678_9999_0000u64,
+//!        name: "name".to_string(),
+//!        stocked_at: "2023/01/03".to_string(),
+//!        author: "author".to_string()
+//!    };
+//!
+//!    let author = "After".to_string();
+//!
+//!    // Auto generate
+//!    let after = before.clone().reconstruct(|before| {
+//!        before.author = author;
+//!    });
+//!
+//!    assert_ne!(before, after);
+//! }
+//```
 
 use proc_macro::TokenStream;
 use quote::quote;
@@ -170,6 +203,12 @@ pub fn derive_destructure(input: TokenStream) -> TokenStream {
             /// If you wish to revert the Destruct structure back to the original structure, see `freeze()`.
             pub fn into_destruct(self) -> #generate_ident {
                 #generate_ident { #(#expanded,)* }
+            }
+
+            pub fn reconstruct(self, f: impl FnOnce(&mut #generate_ident)) -> #name {
+                let mut dest = self.into_destruct();
+                f(&mut dest);
+                dest.freeze()
             }
         }
 

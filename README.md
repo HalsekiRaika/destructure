@@ -1,6 +1,6 @@
 # Automation of Destructure Pattern
 [<img alt="crate.io" src="https://img.shields.io/crates/v/destructure?label=crate.io&logo=rust&style=flat-square">](https://crates.io/crates/destructure)
-[<img alt="docs.rs" src="https://img.shields.io/docsrs/destructure?color=6162ff&label=docs.rs&logo=docs.rs&style=flat-square">](https://docs.rs/destructure/0.1.1/destructure/)
+[<img alt="docs.rs" src="https://img.shields.io/docsrs/destructure?color=6162ff&label=docs.rs&logo=docs.rs&style=flat-square">](https://docs.rs/destructure/0.2.0/destructure/)
 
 `destructure` is a automation library for `destructure pattern`.
 
@@ -18,7 +18,7 @@ pub struct AuthenticateResponse {
     verification_uri: String,
     expires_in: i32,
     message: String,
-    ... // too many fields...
+    // ... too many fields...
 }
 
 impl AuthenticateResponse {
@@ -29,7 +29,7 @@ impl AuthenticateResponse {
             verification_uri: self.verification_uri,
             expires_in: self.expires_in,
             message: self.message,
-            ...
+            // ...
         }
     }
 }
@@ -40,10 +40,11 @@ pub struct DestructAuthenticateResponse {
     pub verification_uri: String,
     pub expires_in: i32,
     pub message: String,
-    ... // too many fields (All `public`.)...
+    // ... too many fields (All `public`.)...
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let res = reqwest::get("http://example.com")
         .send().await.unwrap()
         .json::<AuthenticateResponse>().await.unwrap();
@@ -69,16 +70,49 @@ pub struct AuthenticateResponse {
     verification_uri: String,
     expires_in: i32,
     message: String,
-    ... // too many fields...
+    // ... too many fields...
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let res = reqwest::get("http://example.com")
         .send().await.unwrap()
         .json::<AuthenticateResponse>().await.unwrap();
 
     // Auto generate
     let des: DestructAuthenticateResponse = res.into_destruct();
+
+    println!("{:?}", des.id);
+}
+```
+
+You can also perform safe value substitution by using `reconstruct()`, 
+which performs the same role as the following usage.  
+```rust
+use destructure::Destructure;
+
+#[derive(Destructure)]
+pub struct AuthenticateResponse {
+    id: Uuid,
+    user_code: String,
+    verification_uri: String,
+    expires_in: i32,
+    message: String,
+    // ... too many fields...
+}
+
+#[tokio::main]
+async fn main() {
+    let res = reqwest::get("http://example.com")
+        .send().await.unwrap()
+        .json::<AuthenticateResponse>().await.unwrap();
+
+    let message = "After".to_string();
+    
+    // Auto generate
+    let des: DestructAuthenticateResponse = res.reconstruct(|before| {
+        before.message = message;
+    });
 
     println!("{:?}", des.id);
 }
