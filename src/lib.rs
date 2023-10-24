@@ -205,10 +205,20 @@ pub fn derive_destructure(input: TokenStream) -> TokenStream {
                 #generate_ident { #(#expanded,)* }
             }
 
+            /// It provides a mechanism for replacing the contents by [`into_destruct()`]
+            /// and changing the actual value by [`freeze()`] using a limited closure.
+            ///
+            /// If you wish to use Result, see [`try_reconstruct()`].
             pub fn reconstruct(self, f: impl FnOnce(&mut #generate_ident)) -> #name {
                 let mut dest = self.into_destruct();
                 f(&mut dest);
                 dest.freeze()
+            }
+
+            pub fn try_reconstruct<E>(self, f: impl FnOnce(&mut #generate_ident) -> Result<(), E>) -> Result<#name, E> {
+                let mut dest = self.into_destruct();
+                f(&mut dest)?;
+                Ok(dest.freeze())
             }
         }
 

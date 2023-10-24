@@ -6,4 +6,5 @@ fn tests() {
     try_test.pass("tests/03-generics.rs");
     try_test.pass("tests/04-freeze.rs");
     try_test.pass("tests/05-reconstructor.rs");
+    try_test.pass("tests/06-try-reconstructor.rs");
 }

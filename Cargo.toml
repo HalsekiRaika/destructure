@@ -1,6 +1,6 @@
 [package]
 name = "destructure"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 authors = ["ReiRokusanami <reirokusanami.rdh@gmail.com>"]
 license = "MIT OR Apache-2.0"
@@ -16,6 +16,7 @@ path = "tests/program.rs"
 
 [dev-dependencies]
 trybuild = "1.0"
+anyhow = "1"
 
 [dependencies]
 syn = { version = "2", features = ["extra-traits", "derive"] }
