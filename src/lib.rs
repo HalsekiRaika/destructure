@@ -292,7 +292,7 @@ pub fn derive_mutation(input: TokenStream) -> TokenStream {
         }
 
         impl #name {
-            pub fn substitute(&mut self, mut f: impl FnMut(&mut #generate_ident)) {
+            pub fn substitute(&mut self, mut f: impl FnOnce(&mut #generate_ident)) {
                 f(&mut #generate_ident {
                     #(#expanded,)*
                 })
