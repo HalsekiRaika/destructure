@@ -1,6 +1,6 @@
 [package]
 name = "destructure"
-version = "0.4.2"
+version = "0.4.3"
 edition = "2021"
 authors = ["ReiRokusanami <reirokusanami.rdh@gmail.com>"]
 license = "MIT OR Apache-2.0"
@@ -10,6 +10,11 @@ repository = "https://github.com/HalsekiRaika/destructure"
 [lib]
 proc-macro = true
 
+[[bench]]
+name = "bench"
+path = "bench/program.rs"
+harness = false
+
 [[test]]
 name = "tests"
 path = "tests/program.rs"
@@ -17,6 +22,7 @@ path = "tests/program.rs"
 [dev-dependencies]
 trybuild = "1.0"
 anyhow = "1"
+criterion = "0.5.1"
 
 [dependencies]
 syn = { version = "2", features = ["extra-traits", "derive"] }
