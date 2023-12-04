@@ -148,7 +148,7 @@
 //```
 
 use proc_macro::TokenStream;
-use quote::quote;
+use quote::{quote, quote_spanned};
 use syn::{
     parse_macro_input,
     DeriveInput,
@@ -171,7 +171,7 @@ pub fn derive_destructure(input: TokenStream) -> TokenStream {
     let fields = if let Data::Struct(DataStruct { fields: Fields::Named(FieldsNamed { ref named, ..}), .. }) = ast.data {
         named
     } else {
-        unimplemented!()
+        return quote_spanned! { name.span() => compile_error!("Only structures with named fields are supported.") }.into()
     };
 
     let destruction = fields.iter().map(|field| {
@@ -245,7 +245,7 @@ pub fn derive_mutation(input: TokenStream) -> TokenStream {
     let fields = if let Data::Struct(DataStruct { fields: Fields::Named(FieldsNamed { ref named, ..}), .. }) = ast.data {
         named
     } else {
-        unimplemented!();
+        return quote_spanned! { name.span() => compile_error!("Only structures with named fields are supported.") }.into()
     };
 
     let destruction = fields.iter().map(|field| {
