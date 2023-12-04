@@ -264,14 +264,15 @@ pub fn derive_mutation(input: TokenStream) -> TokenStream {
     });
 
     let q = quote::quote! {
-        /// Do not have an explicit implementation for this structure.
-        pub struct #generate_ident<'mutation> {
-            #(#destruction,)*
+        mod __mutation {
+            /// Do not have an explicit implementation for this structure.
+            pub struct #generate_ident<'mutation> {
+                #(#destruction,)*
+            }
         }
-
         impl #name {
-            pub fn substitute(&mut self, mut f: impl FnMut(&mut #generate_ident)) {
-                f(&mut #generate_ident {
+            pub fn substitute(&mut self, mut f: impl FnMut(&mut __mutation::#generate_ident)) {
+                f(&mut __mutation::#generate_ident {
                     #(#expanded,)*
                 })
             }
