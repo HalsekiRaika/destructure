@@ -232,3 +232,51 @@ pub fn derive_destructure(input: TokenStream) -> TokenStream {
 
     q.into()
 }
+
+
+#[proc_macro_derive(Mutation)]
+pub fn derive_mutation(input: TokenStream) -> TokenStream {
+    let ast = parse_macro_input!(input as DeriveInput);
+    let name = &ast.ident;
+
+    let generate = format!("{}Mut", name);
+    let generate_ident = Ident::new(&generate, name.span());
+
+    let fields = if let Data::Struct(DataStruct { fields: Fields::Named(FieldsNamed { ref named, ..}), .. }) = ast.data {
+        named
+    } else {
+        unimplemented!();
+    };
+
+    let destruction = fields.iter().map(|field| {
+        let name = &field.ident;
+        let ty = &field.ty;
+        quote! {
+            pub #name: &'mutation mut #ty
+        }
+    });
+
+    let expanded = fields.iter().map(|field| {
+        let name = &field.ident;
+        quote! {
+            #name: &mut self.#name
+        }
+    });
+
+    let q = quote::quote! {
+        /// Do not have an explicit implementation for this structure.
+        pub struct #generate_ident<'mutation> {
+            #(#destruction,)*
+        }
+
+        impl #name {
+            pub fn substitute(&mut self, mut f: impl FnMut(&mut #generate_ident)) {
+                f(&mut #generate_ident {
+                    #(#expanded,)*
+                })
+            }
+        }
+    };
+
+    q.into()
+}
