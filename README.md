@@ -1,8 +1,8 @@
 # Automation of Destructure Pattern
 [<img alt="crate.io" src="https://img.shields.io/crates/v/destructure?label=crate.io&logo=rust&style=flat-square">](https://crates.io/crates/destructure)
-[<img alt="docs.rs" src="https://img.shields.io/docsrs/destructure?color=6162ff&label=docs.rs&logo=docs.rs&style=flat-square">](https://docs.rs/destructure/0.2.0/destructure/)
+[<img alt="docs.rs" src="https://img.shields.io/docsrs/destructure?color=6162ff&label=docs.rs&logo=docs.rs&style=flat-square">](https://docs.rs/destructure/0.4.3/destructure/)
 
-`destructure` is a automation library for `destructure pattern`.
+`destructure` is an automation library for `destructure pattern`.
 
 ### What is `destructure pattern`?
 A structure with too many fields makes it hard to call constructors, but it is also hard work to prepare a `Getter/Setter` for each one. There are macros for this purpose, but even so, a large number of macros reduces readability. This is especially true when using `From<T>` Trait.  

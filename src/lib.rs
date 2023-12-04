@@ -145,7 +145,7 @@
 //!
 //!    assert_ne!(before, after);
 //! }
-//```
+//! ```
 
 use proc_macro::TokenStream;
 use quote::{quote, quote_spanned};
@@ -160,6 +160,7 @@ use syn::{
 };
 
 /// Automatically implements `into_destruct()` and `freeze()` methods.
+//noinspection DuplicatedCode
 #[proc_macro_derive(Destructure)]
 pub fn derive_destructure(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
@@ -234,6 +235,27 @@ pub fn derive_destructure(input: TokenStream) -> TokenStream {
 }
 
 
+/// Automatically implements `substitute()` methods.
+///
+/// When performing loop processing, and so on,
+/// it is more efficient than using [`reconstruct()`].
+/// ## Usage
+/// ```rust
+/// use destructure::Mutation;
+///
+/// #[derive(Debug, Mutation)]
+/// pub struct Book {
+///     id: String,
+///     name: String,
+/// }
+///
+/// # fn main() {
+/// # let mut book = Book { id: "123456789-abc".to_string(), name: "name".to_string() };
+/// book.substitute(|book| {
+///     *book.name = "new name".to_string();
+/// });
+/// # }
+//noinspection DuplicatedCode
 #[proc_macro_derive(Mutation)]
 pub fn derive_mutation(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
