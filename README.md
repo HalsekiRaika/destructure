@@ -86,12 +86,12 @@ async fn main() {
 }
 ```
 
-You can also perform safe value substitution by using `reconstruct()`, 
+You can also perform safe value substitution by using `reconstruct()` or `substitute()`,  
 which performs the same role as the following usage.  
 ```rust
-use destructure::Destructure;
+use destructure::{Destructure, Mutation};
 
-#[derive(Destructure)]
+#[derive(Destructure, Mutation)]
 pub struct AuthenticateResponse {
     id: Uuid,
     user_code: String,
@@ -109,9 +109,21 @@ async fn main() {
 
     let message = "After".to_string();
     
-    // Auto generate
-    let des: DestructAuthenticateResponse = res.reconstruct(|before| {
+    // `reconstruct()` consumes self and provides the Destructed structure 
+    // as a variable reference in a closure. 
+    // Literally, it is a method that reconstructs.
+    let res: AuthenticateResponse = res.reconstruct(|before| {
         before.message = message;
+    });
+    
+    // substitute is a method that refills variable references of its own field values 
+    // into another structure and provides them in a closure.
+    //
+    // This method is suitable for loop processing, etc., 
+    // because it processes by reference as opposed to reconstruct, which consumes values.
+    let mut res = res;
+    res.substitute(|before| {
+        *before.message = message;
     });
 
     println!("{:?}", des.id);
