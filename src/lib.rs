@@ -254,6 +254,11 @@ pub fn derive_destructure(input: TokenStream) -> TokenStream {
 /// book.substitute(|book| {
 ///     *book.name = "new name".to_string();
 /// });
+///
+/// book.try_substitute(|book| -> Result<(), std::io::Error> {
+///    *book.name = "new name".to_string();
+///    Ok(())
+/// }).expect("Error");
 /// # }
 //noinspection DuplicatedCode
 #[proc_macro_derive(Mutation)]
@@ -285,6 +290,8 @@ pub fn derive_mutation(input: TokenStream) -> TokenStream {
         }
     });
 
+    let expanded_cloned = expanded.clone();
+
     let q = quote::quote! {
         /// Do not have an explicit implementation for this structure.
         pub struct #generate_ident<'mutation> {
@@ -295,6 +302,12 @@ pub fn derive_mutation(input: TokenStream) -> TokenStream {
             pub fn substitute(&mut self, mut f: impl FnOnce(&mut #generate_ident)) {
                 f(&mut #generate_ident {
                     #(#expanded,)*
+                })
+            }
+
+            pub fn try_substitute<E>(&mut self, mut f: impl FnOnce(&mut #generate_ident) -> Result<(), E>) -> Result<(), E> {
+                f(&mut #generate_ident {
+                    #(#expanded_cloned,)*
                 })
             }
         }
