@@ -9,4 +9,5 @@ fn tests() {
     try_test.pass("tests/06-try-reconstructor.rs");
     try_test.pass("tests/07-mutation.rs");
     try_test.pass("tests/08-try-mutation.rs");
+    try_test.pass("tests/09-multiple-generics.rs");
 }

@@ -156,7 +156,9 @@ use syn::{
     Data,
     DataStruct,
     Fields,
-    FieldsNamed,
+    FieldsNamed, 
+    Lifetime, 
+    spanned::Spanned
 };
 
 /// Automatically implements `into_destruct()` and `freeze()` methods.
@@ -165,6 +167,7 @@ use syn::{
 pub fn derive_destructure(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
     let name = &ast.ident;
+    let generics = &ast.generics;
 
     let generate = format!("Destruct{}", name);
     let generate_ident = Ident::new(&generate, name.span());
@@ -194,15 +197,15 @@ pub fn derive_destructure(input: TokenStream) -> TokenStream {
 
     let q = quote::quote! {
         /// Do not have an explicit implementation for this structure.
-        pub struct #generate_ident {
+        pub struct #generate_ident #generics {
             #(#destruction,)*
         }
 
-        impl #name {
+        impl #generics #name #generics {
             /// Convert the field value to a fully disclosed Destruct structure.
             /// 
             /// If you wish to revert the Destruct structure back to the original structure, see `freeze()`.
-            pub fn into_destruct(self) -> #generate_ident {
+            pub fn into_destruct(self) -> #generate_ident #generics {
                 #generate_ident { #(#expanded,)* }
             }
 
@@ -210,22 +213,22 @@ pub fn derive_destructure(input: TokenStream) -> TokenStream {
             /// and changing the actual value by [`freeze()`] using a limited closure.
             ///
             /// If you wish to use Result, see [`try_reconstruct()`].
-            pub fn reconstruct(self, f: impl FnOnce(&mut #generate_ident)) -> #name {
+            pub fn reconstruct(self, f: impl FnOnce(&mut #generate_ident #generics)) -> Self {
                 let mut dest = self.into_destruct();
                 f(&mut dest);
                 dest.freeze()
             }
 
-            pub fn try_reconstruct<E>(self, f: impl FnOnce(&mut #generate_ident) -> Result<(), E>) -> Result<#name, E> {
+            pub fn try_reconstruct<E>(self, f: impl FnOnce(&mut #generate_ident #generics) -> Result<(), E>) -> Result<Self, E> {
                 let mut dest = self.into_destruct();
                 f(&mut dest)?;
                 Ok(dest.freeze())
             }
         }
 
-        impl #generate_ident {
+        impl #generics #generate_ident #generics {
             /// Restore the Destruct structure to its original structure again.
-            pub fn freeze(self) -> #name {
+            pub fn freeze(self) -> #name #generics {
                 #name { #(#freeze,)* }
             }
         }
@@ -265,7 +268,8 @@ pub fn derive_destructure(input: TokenStream) -> TokenStream {
 pub fn derive_mutation(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
     let name = &ast.ident;
-
+    let generics = &ast.generics;
+    
     let generate = format!("{}Mut", name);
     let generate_ident = Ident::new(&generate, name.span());
 
@@ -275,6 +279,12 @@ pub fn derive_mutation(input: TokenStream) -> TokenStream {
         return quote_spanned! { name.span() => compile_error!("Only structures with named fields are supported.") }.into()
     };
 
+    let lifetime = Lifetime::new("'mutation", generics.span());
+    let generics_gn = generics.params.iter();
+    let generics_with_lt = quote! {
+        <#lifetime, #(#generics_gn,)*>
+    };
+    
     let destruction = fields.iter().map(|field| {
         let name = &field.ident;
         let ty = &field.ty;
@@ -294,18 +304,18 @@ pub fn derive_mutation(input: TokenStream) -> TokenStream {
 
     let q = quote::quote! {
         /// Do not have an explicit implementation for this structure.
-        pub struct #generate_ident<'mutation> {
+        pub struct #generate_ident #generics_with_lt {
             #(#destruction,)*
         }
 
-        impl #name {
-            pub fn substitute(&mut self, mut f: impl FnOnce(&mut #generate_ident)) {
+        impl #generics #name #generics {
+            pub fn substitute(&mut self, mut f: impl FnOnce(&mut #generate_ident #generics)) {
                 f(&mut #generate_ident {
                     #(#expanded,)*
                 })
             }
 
-            pub fn try_substitute<E>(&mut self, mut f: impl FnOnce(&mut #generate_ident) -> Result<(), E>) -> Result<(), E> {
+            pub fn try_substitute<E>(&mut self, mut f: impl FnOnce(&mut #generate_ident #generics) -> Result<(), E>) -> Result<(), E> {
                 f(&mut #generate_ident {
                     #(#expanded_cloned,)*
                 })
