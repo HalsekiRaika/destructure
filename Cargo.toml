@@ -1,6 +1,6 @@
 [package]
 name = "destructure"
-version = "0.5.6"
+version = "0.6.0"
 edition = "2021"
 authors = ["ReiRokusanami <reirokusanami.rdh@gmail.com>"]
 license = "MIT OR Apache-2.0"
