@@ -10,4 +10,5 @@ fn tests() {
     try_test.pass("tests/07-mutation.rs");
     try_test.pass("tests/08-try-mutation.rs");
     try_test.pass("tests/09-multiple-generics.rs");
+    try_test.pass("tests/10-destructure-ref.rs");
 }
