@@ -1,11 +1,11 @@
 #![allow(clippy::needless_doctest_main)]
 //! # Automation of Destructure Pattern
 //! `destructure` is a automation library for `destructure pattern`.
-//! 
+//!
 //! ## Usage
 //! ```rust
 //! use destructure::Destructure;
-//! 
+//!
 //! #[derive(Destructure)]
 //! pub struct Book {
 //!     id: u64,
@@ -14,7 +14,7 @@
 //!     author: String,
 //!     // ... too many fields...
 //! }
-//! 
+//!
 //! fn main() {
 //!     let book = Book {
 //!         id: 1234_5678_9999_0000u64,
@@ -22,24 +22,24 @@
 //!         stocked_at: "2023/01/03".to_string(),
 //!         author: "author".to_string()
 //!     };
-//! 
+//!
 //!     // Auto generate
 //!     let des: DestructBook = book.into_destruct();
-//! 
+//!
 //!     println!("{:?}", des.id);
 //! }
 //! ```
-//! 
+//!
 //! ### What is `destructure pattern`?
 //! A structure with too many fields makes it hard to call constructors,
 //! but it is also hard work to prepare a `Getter/Setter` for each one.
 //! There are macros for this purpose, but even so, a large number of macros reduces readability.
 //! This is especially true when using `From<T>` Trait.
-//! 
-//! So how can this be simplified? It is the technique of "converting all fields to public". 
+//!
+//! So how can this be simplified? It is the technique of "converting all fields to public".
 //!   
 //! This allows for a simplified representation, as in the following example
-//! 
+//!
 //! ```rust
 //! pub struct Book {
 //!     id: u64,
@@ -48,7 +48,7 @@
 //!     author: String,
 //!     // ... too many fields...
 //! }
-//! 
+//!
 //! impl Book {
 //!     pub fn into_destruct(self) -> DestructBook {
 //!         DestructBook {
@@ -59,7 +59,7 @@
 //!         }
 //!     }
 //! }
-//! 
+//!
 //! pub struct DestructBook {
 //!     pub id: u64,
 //!     pub name: String,
@@ -77,16 +77,16 @@
 //!     };
 //!     
 //!     let des = book.into_destruct();
-//! 
+//!
 //!     println!("{:?}", des.id);
 //! }
 //! ```
 //!   
 //! There are several problems with this method, the most serious of which is the increase in boilerplate.  
 //! Using the multi-cursor feature of the editor, this can be done by copy-pasting, but it is still a hassle.  
-//! 
+//!
 //! Therefore, I created a *Procedural Macro* that automatically generates structures and methods:
-//! 
+//!
 //! ```rust
 //! use destructure::Destructure;
 //!
@@ -150,15 +150,8 @@
 use proc_macro::TokenStream;
 use quote::{quote, quote_spanned};
 use syn::{
-    parse_macro_input,
-    DeriveInput,
-    Ident,
-    Data,
-    DataStruct,
-    Fields,
-    FieldsNamed, 
-    Lifetime, 
-    spanned::Spanned
+    parse_macro_input, spanned::Spanned, Data, DataStruct, DeriveInput, Fields, FieldsNamed, Ident,
+    Lifetime, LifetimeParam,
 };
 
 /// Automatically implements `into_destruct()` and `freeze()` methods.
@@ -172,10 +165,14 @@ pub fn derive_destructure(input: TokenStream) -> TokenStream {
     let generate = format!("Destruct{}", name);
     let generate_ident = Ident::new(&generate, name.span());
 
-    let fields = if let Data::Struct(DataStruct { fields: Fields::Named(FieldsNamed { ref named, ..}), .. }) = ast.data {
+    let fields = if let Data::Struct(DataStruct {
+        fields: Fields::Named(FieldsNamed { ref named, .. }),
+        ..
+    }) = ast.data
+    {
         named
     } else {
-        return quote_spanned! { name.span() => compile_error!("Only structures with named fields are supported.") }.into()
+        return quote_spanned! { name.span() => compile_error!("Only structures with named fields are supported.") }.into();
     };
 
     let destruction = fields.iter().map(|field| {
@@ -203,7 +200,7 @@ pub fn derive_destructure(input: TokenStream) -> TokenStream {
 
         impl #generics #name #generics {
             /// Convert the field value to a fully disclosed Destruct structure.
-            /// 
+            ///
             /// If you wish to revert the Destruct structure back to the original structure, see `freeze()`.
             pub fn into_destruct(self) -> #generate_ident #generics {
                 #generate_ident { #(#expanded,)* }
@@ -237,6 +234,71 @@ pub fn derive_destructure(input: TokenStream) -> TokenStream {
     q.into()
 }
 
+/// Automatically implements `as_destruct()` method.
+//noinspection DuplicatedCode
+#[proc_macro_derive(DestructureRef)]
+pub fn derive_destructure_ref(input: TokenStream) -> TokenStream {
+    let ast = parse_macro_input!(input as DeriveInput);
+    let name = &ast.ident;
+    let generics = &ast.generics;
+    let mut destructure_generics = ast.generics.clone();
+
+    let generate = format!("Destruct{}Ref", name);
+    let generate_ident = Ident::new(&generate, name.span());
+
+    let fields = if let Data::Struct(DataStruct {
+        fields: Fields::Named(FieldsNamed { ref named, .. }),
+        ..
+    }) = ast.data
+    {
+        named
+    } else {
+        return quote_spanned! { name.span() => compile_error!("Only structures with named fields are supported.") }.into();
+    };
+
+    let origin_lifetime: Lifetime =
+        syn::parse_str("'__origin_destruct_lifetime").expect("cannot parse lifetime");
+
+    destructure_generics
+        .params
+        .push(syn::GenericParam::Lifetime(LifetimeParam {
+            lifetime: origin_lifetime.clone(),
+            attrs: Default::default(),
+            colon_token: Default::default(),
+            bounds: Default::default(),
+        }));
+
+    let destruction = fields.iter().map(|field| {
+        let name = &field.ident;
+        let ty = &field.ty;
+        quote! {
+            pub #name: & #origin_lifetime #ty
+        }
+    });
+
+    let expanded = fields.iter().map(|field| {
+        let name = &field.ident;
+        quote! {
+            #name: & self.#name
+        }
+    });
+
+    let q = quote::quote! {
+        /// Do not have an explicit implementation for this structure.
+        pub struct #generate_ident #destructure_generics {
+            #(#destruction,)*
+        }
+
+        impl #generics #name #generics {
+            /// Makes the field value to a fully disclosed Destruct structure with access by reference.
+            pub fn as_destruct<#origin_lifetime>(& #origin_lifetime self) -> #generate_ident #destructure_generics {
+                #generate_ident { #(#expanded,)* }
+            }
+        }
+    };
+
+    q.into()
+}
 
 /// Automatically implements `substitute()` methods.
 ///
@@ -269,14 +331,18 @@ pub fn derive_mutation(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
     let name = &ast.ident;
     let generics = &ast.generics;
-    
+
     let generate = format!("{}Mut", name);
     let generate_ident = Ident::new(&generate, name.span());
 
-    let fields = if let Data::Struct(DataStruct { fields: Fields::Named(FieldsNamed { ref named, ..}), .. }) = ast.data {
+    let fields = if let Data::Struct(DataStruct {
+        fields: Fields::Named(FieldsNamed { ref named, .. }),
+        ..
+    }) = ast.data
+    {
         named
     } else {
-        return quote_spanned! { name.span() => compile_error!("Only structures with named fields are supported.") }.into()
+        return quote_spanned! { name.span() => compile_error!("Only structures with named fields are supported.") }.into();
     };
 
     let lifetime = Lifetime::new("'mutation", generics.span());
@@ -284,7 +350,7 @@ pub fn derive_mutation(input: TokenStream) -> TokenStream {
     let generics_with_lt = quote! {
         <#lifetime, #(#generics_gn,)*>
     };
-    
+
     let destruction = fields.iter().map(|field| {
         let name = &field.ident;
         let ty = &field.ty;
