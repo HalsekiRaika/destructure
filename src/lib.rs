@@ -1,6 +1,6 @@
 #![allow(clippy::needless_doctest_main)]
 //! # Automation of Destructure Pattern
-//! `destructure` is a automation library for `destructure pattern`.
+//! `destructure` is an automation library for `destructure pattern`.
 //!
 //! ## Usage
 //! ```rust
@@ -148,15 +148,23 @@
 //! ```
 
 use proc_macro::TokenStream;
+use darling::FromField;
+use darling::util::Flag;
 use quote::{quote, quote_spanned};
 use syn::{
     parse_macro_input, spanned::Spanned, Data, DataStruct, DeriveInput, Fields, FieldsNamed, Ident,
     Lifetime, LifetimeParam,
 };
 
+#[derive(darling::FromField)]
+#[darling(attributes(destructure))]
+struct Attributes {
+    skip: Flag,
+}
+
 /// Automatically implements `into_destruct()` and `freeze()` methods.
 //noinspection DuplicatedCode
-#[proc_macro_derive(Destructure)]
+#[proc_macro_derive(Destructure, attributes(destructure))]
 pub fn derive_destructure(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as DeriveInput);
     let name = &ast.ident;
@@ -176,21 +184,31 @@ pub fn derive_destructure(input: TokenStream) -> TokenStream {
     };
 
     let destruction = fields.iter().map(|field| {
+        let Ok(attr) = Attributes::from_field(field) else {
+            return quote_spanned! { field.span() => compile_error!("unrecognized attribute.") }.into();
+        };
         let name = &field.ident;
         let ty = &field.ty;
-        quote! {
-            pub #name: #ty
+        
+        if attr.skip.is_present() {
+            quote! {
+                #name: #ty
+            }
+        } else {
+            quote! {
+                pub #name: #ty
+            }
         }
     });
 
-    let expanded = fields.iter().map(|field| {
+    let constructor = fields.iter().map(|field| {
         let name = &field.ident;
         quote! {
             #name: self.#name
         }
     });
 
-    let freeze = expanded.clone();
+    let freeze = constructor.clone();
 
     let q = quote::quote! {
         /// Do not have an explicit implementation for this structure.
@@ -203,7 +221,7 @@ pub fn derive_destructure(input: TokenStream) -> TokenStream {
             ///
             /// If you wish to revert the Destruct structure back to the original structure, see `freeze()`.
             pub fn into_destruct(self) -> #generate_ident #generics {
-                #generate_ident { #(#expanded,)* }
+                #generate_ident { #(#constructor,)* }
             }
 
             /// It provides a mechanism for replacing the contents by [`into_destruct()`]

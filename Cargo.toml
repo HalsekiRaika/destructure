@@ -27,3 +27,4 @@ criterion = "0.5.1"
 [dependencies]
 syn = { version = "2", features = ["extra-traits", "derive"] }
 quote = "1"
+darling = "0.20"
